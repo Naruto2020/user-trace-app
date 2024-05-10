@@ -21,8 +21,8 @@ model User {
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
   travels     Travel[]  @relation("user_trips")
-  //notifications Notification[]  @relation("user_notifications")
-  //geolocations Geolocation[]  @relation("user_geolacations")
+  notifications Notification[]  @relation("user_notifications")
+  geolocations Geolocation[]  @relation("user_geolacations")
 }
 
 model Departure {
@@ -52,5 +52,25 @@ model Travel {
   destinationId  Int
   departure    Departure @relation("departure_trips"  ,fields: [departureId], references: [id])
   departureId  Int
-  //notifications  Notification[]  @relation("trip_notifications")
+  notifications  Notification[]  @relation("trip_notifications")
+}
+
+model Geolocation {
+  id         Int      @id @default(autoincrement())
+  latitude   Decimal
+  longitude  Decimal
+  timestamp  String @db.VarChar(255)
+  user       User     @relation("user_geolacations", fields: [userId], references: [id])
+  userId     Int
+}
+
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  message   String
+  createdAt DateTime @default(now())
+  user      User     @relation("user_notifications", fields: [userId], references: [id])
+  userId    Int
+  travel       Travel     @relation("trip_notifications" ,fields: [travelId], references: [id])
+  travelId     Int
 }
