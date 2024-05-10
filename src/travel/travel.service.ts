@@ -6,12 +6,16 @@ import { CreateTravelDto } from './dto/createTravelDto';
 import { CreateTravelWithDesttDto } from './dto/createTravelWithDestDto';
 import { CreateDeptDto } from 'src/departure/dto/createDepDto';
 import { CreateDestDto } from 'src/destination/dto/createDestDto';
+import { Travel } from '@prisma/client';
+import { CreateTriggerNotifDto } from './dto/createTriggerNotifDto';
+import { NotificationService } from 'src/notification/notification.service';
+import { UpdateTravelDto } from './dto/updateTravelDto';
 
 @Injectable()
 export class TravelService {
-    constructor(private readonly prismaService: PrismaService, private readonly destinationService: DestinationService, private readonly departureService: DepartureService) {}
+    constructor(private readonly prismaService: PrismaService, private readonly destinationService: DestinationService, private readonly departureService: DepartureService, private readonly notificationService: NotificationService) {}
 
-    async createTravelWithDest(createTravelDto: CreateTravelDto, userId: any):Promise<object> {
+    async createTravelWithDest(createTravelDto: CreateTravelDto, userId: any):Promise<Travel> {
 
         const {departureTime, arrivalTime, destinationId, departureId} = createTravelDto
     
@@ -27,7 +31,7 @@ export class TravelService {
         return createdTrip;
     }
 
-    async createTravel(createTravelWithDto: CreateTravelWithDesttDto, userId: any): Promise<object> {
+    async createTravel(createTravelWithDto: CreateTravelWithDesttDto, userId: any): Promise<Travel> {
        
         const {departureAddress, destinationAddress, departureTime, arrivalTime, destinationLat, destinationLng, departureLat, departureLng} = createTravelWithDto;
 
@@ -70,7 +74,23 @@ export class TravelService {
         }
         
         const createdTrip = await this.createTravelWithDest(createTravelDto, userId);
+        let createTriggerNotifDto: CreateTriggerNotifDto = {
+            message: '',
+            userId: createdTrip.userId,
+            travelId: createdTrip.id
+        };
+        this.notificationService.create(createTriggerNotifDto, createdTrip.userId, createdTrip.id);
         return createdTrip;
     }
 
+    async editTravel(id: number, updateTravelDto: UpdateTravelDto, userId: number): Promise<Travel> {
+        const {arrivalTime, departureTime} = updateTravelDto;
+        const traveledited = await this.prismaService.travel.update({
+            where: {id: id, userId},
+            data: {arrivalTime, departureTime} 
+        });
+        return traveledited;
+    }
+
 }
+

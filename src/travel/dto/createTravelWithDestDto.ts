@@ -3,7 +3,6 @@ import { IsNotEmpty } from "class-validator";
 export class CreateTravelWithDesttDto {
     @IsNotEmpty()
      departureTime: string;
-     @IsNotEmpty()
      arrivalTime: string;
      userId: number;
      destinationId: number;
