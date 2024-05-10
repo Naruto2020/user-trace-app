@@ -20,4 +20,37 @@ model User {
   password String @db.VarChar(255)
   createdAt DateTime @default(now())
   updateAt DateTime @updatedAt
+  travels     Travel[]  @relation("user_trips")
+  //notifications Notification[]  @relation("user_notifications")
+  //geolocations Geolocation[]  @relation("user_geolacations")
+}
+
+model Departure {
+  id          Int      @id @default(autoincrement())
+  address String   @db.VarChar(255)
+  departureLat   Decimal 
+  departureLng   Decimal   
+  travels     Travel[]  @relation("departure_trips")
+}
+
+model Destination {
+  id          Int      @id @default(autoincrement())
+  address String   @db.VarChar(255)
+  destinationLat   Decimal 
+  destinationLng   Decimal   
+  travels     Travel[]  @relation("detination_trips")
+}
+
+
+model Travel {
+  id Int  @id @default(autoincrement())
+  departureTime String @db.VarChar(255)
+  arrivalTime   String @db.VarChar(255)
+  user          User     @relation("user_trips" ,fields: [userId], references: [id])
+  userId        Int
+  destination    Destination @relation("detination_trips"  ,fields: [destinationId], references: [id])
+  destinationId  Int
+  departure    Departure @relation("departure_trips"  ,fields: [departureId], references: [id])
+  departureId  Int
+  //notifications  Notification[]  @relation("trip_notifications")
 }
