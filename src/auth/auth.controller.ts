@@ -32,16 +32,19 @@ export class AuthController {
     }
 
     @Get('users')
+    @UseGuards(JwtCookieAuthGuard)
     getUsers(): Promise<User[]> {
         return this.authService.getUsers();
     }
 
     @Put(':id')
+    @UseGuards(JwtCookieAuthGuard)
     editUser(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto : UpdateUserDto): Promise<User> {
         return this.authService.editUser(id, updateUserDto);
     }
 
     @Delete(':id')
+    @UseGuards(JwtCookieAuthGuard)
     @UseGuards(JwtCookieAuthGuard)
     deleteUser(@Req() request: Request):Promise<number> {
         const userId = request.user['id'];
