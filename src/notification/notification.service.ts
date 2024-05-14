@@ -5,6 +5,7 @@ import { Travel } from '@prisma/client';
 
 @Injectable()
 export class NotificationService {
+
     constructor(private readonly prismaService: PrismaService) {}
 
     async create(createNotificationDto: CreateNotificationtionDto, userId: number, travelId: number) {
@@ -117,6 +118,18 @@ export class NotificationService {
     calculateArrivedHour(heureDepart: Date, tempsTrajetHeures: number): Date {
         const heureArrivee = new Date(heureDepart.getTime() + tempsTrajetHeures * 3600000); // Convertir les heures en millisecondes
         return heureArrivee;
+    }
+
+
+
+    async getNotifications(): Promise<any> {
+        try {
+            const notifications =  await this.prismaService.notification.findMany();
+            return notifications;
+              
+          } catch (error) {
+            return error;
+          }
     }
 }
 
