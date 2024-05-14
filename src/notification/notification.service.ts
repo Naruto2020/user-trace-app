@@ -8,39 +8,48 @@ export class NotificationService {
     constructor(private readonly prismaService: PrismaService) {}
 
     async create(createNotificationDto: CreateNotificationtionDto, userId: number, travelId: number) {
-        let {message} = createNotificationDto;
-        // check if is start or finish notification 
-        const currentTrip = await this.prismaService.travel.findFirst({where: {id: travelId}})
-        const currentUser = await this.prismaService.user.findUnique({where: {id: userId}})
-        
-        const tripDepartureTime = currentTrip.departureTime;
-        const tripeArrivalTime = currentTrip.arrivalTime;
-       //formated  hour 
-       const departureDateFormatted = this.formatedHours(tripDepartureTime);
-       const arrivalDateFormated = this.formatedHours(tripeArrivalTime);
 
-        // Calcul de l'heure d'arrivé 
-        const tripTime = await this.calculateTripTime(currentTrip);
-        const dateObject = new Date(currentTrip.departureTime);
-        const tripTimeArrived = this.calculateArrivedHour(dateObject, tripTime);
-        const tripTimeArrivedFormatted = tripTimeArrived.toLocaleString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric'
-        });
+        try {
 
-        if(currentTrip.arrivalTime === "") {
-            message = `${currentUser.name} a commencer le trajet le ${departureDateFormatted} et va arrivé le ${tripTimeArrivedFormatted}`
-        } else {
-            message = `${currentUser.name} est arrivé le  ${arrivalDateFormated}`
+            let {message} = createNotificationDto;
+            // check if is start or finish notification 
+            const currentTrip = await this.prismaService.travel.findFirst({where: {id: travelId}})
+            const currentUser = await this.prismaService.user.findUnique({where: {id: userId}})
+            
+            const tripDepartureTime = currentTrip.departureTime;
+            const tripeArrivalTime = currentTrip.arrivalTime;
+           //formated  hour 
+           const departureDateFormatted = this.formatedHours(tripDepartureTime);
+           const arrivalDateFormated = this.formatedHours(tripeArrivalTime);
+    
+            // Calcul de l'heure d'arrivé 
+            const tripTime = await this.calculateTripTime(currentTrip);
+            const dateObject = new Date(currentTrip.departureTime);
+            const tripTimeArrived = this.calculateArrivedHour(dateObject, tripTime);
+            const tripTimeArrivedFormatted = tripTimeArrived.toLocaleString('fr-FR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric'
+            });
+    
+            if(currentTrip.arrivalTime === "") {
+                message = `${currentUser.name} a commencer le trajet le ${departureDateFormatted} et va arrivé le ${tripTimeArrivedFormatted}`
+            } else {
+                message = `${currentUser.name} est arrivé le  ${arrivalDateFormated}`
+            }
+            const newNotification = await this.prismaService.notification.create({data : {message, userId, travelId}});
+            return newNotification;
+            
+        } catch (error) {
+            return error;
         }
-        const newNotification = await this.prismaService.notification.create({data : {message, userId, travelId}});
-        return newNotification;
+        
     }
+    
 
     formatedHours(hour: any) {
         if(typeof hour === "string" ) {
@@ -77,19 +86,15 @@ export class NotificationService {
         // Calcul de la distance entre le point de départ et la destination
         const distanceKm = await this.distanceEntrePoint(userStartLat, userStartLon, userFinishLat, userFinishLon);
 
-        // Vitesse de déplacement à pied en kilomètres par heure
+        // Vitesse de déplacement en voiture en kilomètres par heure
         const vitesseVoitureKmh = 50; 
 
-        // Calcul du temps de trajet à pied en heures
+        // Calcul du temps de trajet  en heures
         const hourTripTimes = distanceKm / vitesseVoitureKmh;
         //const formattedTripTimes = this.convertTimes(hourTripTimes);
         return hourTripTimes;
     }
 
-    calculateArrivedHour(heureDepart: Date, tempsTrajetHeures: number): Date {
-        const heureArrivee = new Date(heureDepart.getTime() + tempsTrajetHeures * 3600000); // Convertir les heures en millisecondes
-        return heureArrivee;
-    }
 
     async distanceEntrePoint(lat1: number, lon1: number, lat2: number, lon2: number) {
         const R = 6371; // Rayon de la Terre en kilomètres
@@ -107,6 +112,11 @@ export class NotificationService {
     // Fonction pour convertir les degrés en radians
     deg2rad(deg: number): number {
         return deg * (Math.PI / 180);
+    }
+
+    calculateArrivedHour(heureDepart: Date, tempsTrajetHeures: number): Date {
+        const heureArrivee = new Date(heureDepart.getTime() + tempsTrajetHeures * 3600000); // Convertir les heures en millisecondes
+        return heureArrivee;
     }
 }
 
